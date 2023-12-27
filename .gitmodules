@@ -1,0 +1,6 @@
+[submodule "NEMU"]
+	path = NEMU
+	url = https://github.com/OpenXiangShan/NEMU.git
+[submodule "WenXuanVec/difftest"]
+	path = WenXuanVec/difftest
+	url = https://github.com/OpenXiangShan/difftest.git

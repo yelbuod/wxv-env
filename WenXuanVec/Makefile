@@ -1,5 +1,5 @@
 BUILD_DIR = ./build
-OSCPU_HOME = $(shell pwd)
+WENXUANVEC_HOME = $(shell pwd)
 
 VERILATOR_FLAGS = -cc --exe -Os -x-assign 0 \
 	--assert --trace
@@ -8,13 +8,13 @@ default: verilog
 
 verilog:
 	mkdir -p $(BUILD_DIR)
-	mill -i oscpu.runMain TopMain -td $(BUILD_DIR)
+	mill -i wenxuanvec.runMain TopMain -td $(BUILD_DIR)
 
 emu: verilog
-	cd $(OSCPU_HOME)/difftest && $(MAKE) emu
+	cd $(WENXUANVEC_HOME)/difftest && $(MAKE) emu
 
 help:
-	mill -i oscpu.runMain TopMain --help
+	mill -i wenxuanvec.runMain TopMain --help
 
 clean:
 	-rm -rf $(BUILD_DIR)

@@ -17,7 +17,7 @@ object difftest extends SbtModule {
   )
 }
 
-object oscpu extends SbtModule { m =>
+object wenxuanvec extends SbtModule { m =>
   override def millSourcePath = os.pwd
   override def scalaVersion = "2.12.13"
   override def scalacOptions = Seq(

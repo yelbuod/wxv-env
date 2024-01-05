@@ -4,3 +4,6 @@
 [submodule "WenXuanVec/difftest"]
 	path = WenXuanVec/difftest
 	url = https://github.com/OpenXiangShan/difftest.git
+[submodule "WenXuanVec/rocket-chip"]
+	path = WenXuanVec/rocket-chip
+	url = git@github.com:OpenXiangShan/rocket-chip.git

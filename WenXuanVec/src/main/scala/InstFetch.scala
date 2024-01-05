@@ -16,11 +16,6 @@ class InstFetch extends Module {
   val pc = RegInit("h80000000".U(64.W))
   val pc_next = Mux(io.pc_jaddr.valid, io.pc_jaddr.bits, pc + 4.U)
   pc := pc_next
-  // when (io.pc_jaddr.valid) {
-  //   pc := io.pc_jaddr.bits
-  // }.otherwise {
-    
-  // }
 
   io.imem.en := true.B
   io.imem.addr := pc.asUInt()

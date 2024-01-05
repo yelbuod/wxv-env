@@ -16,6 +16,9 @@ emu: verilog
 help:
 	mill -i wenxuanvec.runMain TopMain --help
 
+idea:
+	mill -i mill.scalalib.GenIdea/idea
+	
 clean:
 	-rm -rf $(BUILD_DIR)
 	-rm -rf obj_dir

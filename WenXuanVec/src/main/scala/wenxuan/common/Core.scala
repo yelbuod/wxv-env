@@ -1,7 +1,12 @@
+package wenxuan.common
+
 import chisel3._
 import chisel3.util.experimental._
 import chisel3.util._
 import difftest._
+import wenxuan.backend._
+import wenxuan.frontend._
+import wenxuan.mem._
 
 class Core extends Module {
   val io = IO(new Bundle {

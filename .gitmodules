@@ -7,3 +7,6 @@
 [submodule "WenXuanVec/rocket-chip"]
 	path = WenXuanVec/rocket-chip
 	url = git@github.com:OpenXiangShan/rocket-chip.git
+[submodule "WenXuanVec/XiangShan"]
+	path = WenXuanVec/XiangShan
+	url = git@github.com:yelbuod/XiangShan.git

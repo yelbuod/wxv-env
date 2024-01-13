@@ -1,39 +1,32 @@
+/***************************************************************************************
+ * Copyright (c) 2024-2026 YangYang, https://github.com/yelbuod
+ *
+ * XiangShan is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the Mulan PSL v2 for more details.
+ *
+ * Description:
+ * 	Configure core parameters, and decoupled the predictor parameters from other parameters within the core
+ ***************************************************************************************/
+
 package wenxuan.common
 
 import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.{Parameters, Config, Field}
 
-class WithDefaultWenXuan extends Confg(
+class WithDefaultWenXuan extends Config(
 	new WithTAGEBPD ++ // Default to TAGE BPD
-	
+	new WithBaseWXNoBPD
 )
 
-class WithTAGELBPD extends Config((site, here, up) => {
-  case TilesLocated(InSubsystem) => up(TilesLocated(InSubsystem), site) map {
-    case tp: BoomTileAttachParams => tp.copy(tileParams = tp.tileParams.copy(core = tp.tileParams.core.copy(
-      bpdMaxMetaLength = 120,
-      globalHistoryLength = 64,
-      localHistoryLength = 1,
-      localHistoryNSets = 0,
-      branchPredictor = ((resp_in: BranchPredictionBankResponse, p: Parameters) => {
-        val loop = Module(new LoopBranchPredictorBank()(p))
-        val tage = Module(new TageBranchPredictorBank()(p))
-        val btb = Module(new BTBBranchPredictorBank()(p))
-        val bim = Module(new BIMBranchPredictorBank()(p))
-        val ubtb = Module(new FAMicroBTBBranchPredictorBank()(p))
-        val preds = Seq(loop, tage, btb, ubtb, bim)
-        preds.map(_.io := DontCare)
-
-        ubtb.io.resp_in(0)  := resp_in
-        bim.io.resp_in(0)   := ubtb.io.resp
-        btb.io.resp_in(0)   := bim.io.resp
-        tage.io.resp_in(0)  := btb.io.resp
-        loop.io.resp_in(0)  := tage.io.resp
-
-        (preds, loop.io.resp)
-      })
-    )))
-    case other => other
-  }
+class WithBaseWXNoBPD extends Config((site, here, up) => {
+	case WXVTileKey => WXVTileParams()
 })

@@ -15,7 +15,10 @@
 
 package wenxuan.cache
 
-import wenxuan.common.HasTileParameters
+import chisel3._
+import chisel3.util._
+import org.chipsalliance.cde.config.Parameters
+import wenxuan.common._
 
 trait L1CacheParams {
   def nSets:         Int
@@ -29,4 +32,57 @@ trait L1CacheParams {
 trait HasL1CacheParameters extends HasTileParameters{
   val cacheParams: L1CacheParams
 
+  def nSets = cacheParams.nSets
+  def nWays = cacheParams.nWays
+  def rowBits = cacheParams.rowBits
+  def blockBytes = cacheParams.blockBytes
+  def blockBits = blockBytes * 8
+  def blockOffBits = log2Up(blockBytes)
+}
+
+abstract class L1CacheBundle(implicit p: Parameters) extends WXBundle
+  with HasL1CacheParameters
+
+
+// L1 Error infomation signal
+class L1BusErrorUnitInfo(implicit p: Parameters) extends WXBundle {
+  val ecc_error = Valid(UInt(PAddrBits.W))
+}
+
+class L1CacheErrorInfo(implicit p: Parameters) extends WXBundle {
+  // L1CacheErrorInfo is also used to encode customized CACHE_ERROR CSR
+  val source = Output(new Bundle() {
+    val tag = Bool() // l1 tag array
+    val data = Bool() // l1 data array
+    val l2 = Bool()
+  })
+  val opType = Output(new Bundle() {
+    val fetch = Bool()
+    val load = Bool()
+    val store = Bool()
+    val probe = Bool()
+    val release = Bool()
+    val atom = Bool()
+  })
+  val paddr = Output(UInt(PAddrBits.W))
+
+  // report error and paddr to beu
+  // bus error unit will receive error info iff ecc_error.valid
+  val report_to_beu = Output(Bool())
+
+  // there is an valid error
+  // l1 cache error will always be report to CACHE_ERROR csr
+  val valid = Output(Bool())
+
+  def toL1BusErrorUnitInfo(): L1BusErrorUnitInfo = {
+    val beu_info = Wire(new L1BusErrorUnitInfo)
+    beu_info.ecc_error.valid := report_to_beu
+    beu_info.ecc_error.bits := paddr
+    beu_info
+  }
+}
+
+class L1CacheToCsrIO(implicit p: Parameters) extends WXBundle {
+  val distribute_csr = Flipped(new DistributedCSRIO)
+  val update = new DistributedCSRUpdateReq
 }

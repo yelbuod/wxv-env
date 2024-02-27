@@ -13,24 +13,33 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wenxuan.common
+package wenxuan.frontend.icache
 
 import chisel3._
 import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import system.SoCParamsKey
-import freechips.rocketchip.tile.XLen
+import org.chipsalliance.cde.config.Parameters
+import wenxuan.frontend._
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128
-){
-	def VAddrBits: Int = 39
+class ICacheMainPipeResp(implicit p: Parameters) extends ICacheBundle
+{
+  val vaddr    = UInt(VAddrBits.W)
+  val data     = UInt((blockBits/2).W)
+  val paddr    = UInt(PAddrBits.W)
+  val tlbExcp  = new Bundle{
+    val pageFault = Bool()
+    val accessFault = Bool()
+    val mmio = Bool()
+  }
 }
 
-trait HasWXCommonParameters extends HasTileParameters{
+class ICacheMainPipeBundle(implicit p: Parameters) extends ICacheBundle
+{
+  val req  = Flipped(Decoupled(new FtqToICacheRequestBundle))
+  val resp = Vec(PortNumber, ValidIO(new ICacheMainPipeResp))
+  val topdownIcacheMiss = Output(Bool())
+  val topdownItlbMiss = Output(Bool())
+}
 
-	implicit val p: Parameters
+class ICacheMainPipe {
 
 }

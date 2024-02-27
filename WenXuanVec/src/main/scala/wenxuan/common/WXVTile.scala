@@ -16,7 +16,9 @@
 package wenxuan.common
 
 import coupledL2.L2Param
-import org.chipsalliance.cde.config.{Field, Config, Parameters}
+import freechips.rocketchip.tile.XLen
+import org.chipsalliance.cde.config.{Config, Field, Parameters}
+import system.SoCParamsKey
 import wenxuan.frontend.icache.ICacheParams
 import wenxuan.cache.DCacheParams
 
@@ -44,4 +46,11 @@ trait HasTileParameters {
   // why use 'def' instead of 'val', cause 'val' will exactly create a whole WXVTileParams type instance
   //  in which extends HasTileParameters, even if you don't need all members of HasTileParameters
   def tileParams: WXVTileParams = p(WXVTileKey)
+
+  val XLEN: Int = p(XLen)
+
+  val PAddrBits = p(SoCParamsKey).PAddrBits // PAddrBits is Phyical Memory addr bits
+  //  val coreParams: WXVCoreParams = tileParams.core
+  val VAddrBits: Int = tileParams.core.VAddrBits
+
 }

@@ -13,24 +13,18 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wenxuan.common
+package wxtop
 
-import chisel3._
-import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import system.SoCParamsKey
+import org.chipsalliance.cde.config.Config
 import freechips.rocketchip.tile.XLen
+import system.{SoCParameters, SoCParamsKey}
+import wenxuan.common.WithDefaultWenXuan
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128
-){
-	def VAddrBits: Int = 39
-}
+class BaseConfig extends Config(
+  new WithDefaultWenXuan ++
+    new Config((site, here, up) => {
+      case XLen => 64
+      case SoCParamsKey => SoCParameters()
+    })
+)
 
-trait HasWXCommonParameters extends HasTileParameters{
-
-	implicit val p: Parameters
-
-}

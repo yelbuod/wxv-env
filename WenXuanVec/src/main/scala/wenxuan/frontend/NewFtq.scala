@@ -13,24 +13,19 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wenxuan.common
+package wenxuan.frontend
 
 import chisel3._
 import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import system.SoCParamsKey
-import freechips.rocketchip.tile.XLen
+import org.chipsalliance.cde.config.Parameters
+import wenxuan.common.WXBundle
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128
-){
-	def VAddrBits: Int = 39
+class Ftq_RF_Components(implicit p: Parameters) extends WXBundle{
+  val startAddr = UInt(VAddrBits.W)
+  val nextLineAddr = UInt(VAddrBits.W)
+
 }
 
-trait HasWXCommonParameters extends HasTileParameters{
-
-	implicit val p: Parameters
+class NewFtq {
 
 }

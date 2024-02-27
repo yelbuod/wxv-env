@@ -23,6 +23,10 @@ import difftest._
 import wenxuan.backend._
 import wenxuan.frontend._
 import wenxuan.mem._
+import org.chipsalliance.cde.config.Parameters
+
+abstract class WXBundle(implicit val p: Parameters) extends Bundle
+  with HasWXCommonParameters
 
 class WXVCore extends Module {
   val io = IO(new Bundle {

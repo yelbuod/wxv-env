@@ -21,7 +21,7 @@ import wenxuan.common.WXBundle
 import org.chipsalliance.cde.config.Parameters
 import wenxuan.frontend.icache.HasICacheParameters
 
-// Ftq request to ICache Prefetch
+/** Ftq request to ICache Prefetch */
 class PrefetchRequest(implicit p: Parameters) extends WXBundle {
   val target          = UInt(VAddrBits.W)
 }
@@ -30,7 +30,7 @@ class FtqPrefechBundle(implicit p: Parameters) extends WXBundle {
   val req = DecoupledIO(new PrefetchRequest)
 }
 
-// Ftq request to ICache fetch
+/** Ftq request to ICache fetch */
 class FtqICacheInfo(implicit p: Parameters)extends WXBundle with HasICacheParameters{
   val startAddr           = UInt(VAddrBits.W)
   val nextlineStart       = UInt(VAddrBits.W)

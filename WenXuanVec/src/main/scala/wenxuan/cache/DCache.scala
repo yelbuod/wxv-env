@@ -15,7 +15,8 @@
 
 package wenxuan.cache
 
-import chisel3.util.log2Ceil
+import chisel3._
+import chisel3.util._
 import utility.Code
 import xiangshan.cache.L1CacheParameters
 

@@ -53,4 +53,6 @@ trait HasTileParameters {
   //  val coreParams: WXVCoreParams = tileParams.core
   val VAddrBits: Int = tileParams.core.VAddrBits
 
+  // cache hierarchy configurations
+  val l1BusDataWidth = 256
 }

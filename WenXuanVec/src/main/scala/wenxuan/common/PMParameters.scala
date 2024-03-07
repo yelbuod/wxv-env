@@ -15,21 +15,20 @@
 
 package wenxuan.common
 
-import chisel3._
-import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import freechips.rocketchip.tile.XLen
+import org.chipsalliance.cde.config.{Parameters, Field}
+import system.SoCParamsKey
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128
-){
-	def VAddrBits: Int = 39
-}
+/** Physical Memory Parameters */
 
-trait HasWXCommonParameters extends HasTileParameters{
+case object PMParamsKey extends Field[PMParams]
 
-	implicit val p: Parameters
+case class PMParams
+(
 
+)
+
+trait HasPMParameters {
+  implicit val p: Parameters
+
+  val PMPaddrBits = p(SoCParamsKey).PAddrBits
 }

@@ -38,13 +38,28 @@ trait HasL1CacheParameters extends HasTileParameters{
   def blockBytes = cacheParams.blockBytes
   def blockBits = blockBytes * 8
   def blockOffBits = log2Up(blockBytes)
+
+  def idxBits = log2Up(nSets)
+  def highestIdxBit = idxBits - 1
+  def untagBits = idxBits + blockOffBits
+  def pgIdxBits = 12 // 4K page
+  def pgUntagBits = untagBits min pgIdxBits
+  def tagBits = PAddrBits - pgUntagBits
+
+  def get_phy_tag(paddr: UInt) = (paddr >> pgUntagBits).asUInt
+  def get_idx(vaddr: UInt) = vaddr(untagBits-1, blockOffBits)
+  def get_block(addr: UInt) = (addr >> blockOffBits).asUInt // block number
+
+  def beatBits = l1BusDataWidth
+  def beatBytes = beatBits / 8
+  def refillCycles = blockBytes / beatBytes
 }
 
 abstract class L1CacheBundle(implicit p: Parameters) extends WXBundle
   with HasL1CacheParameters
 
 
-// L1 Error infomation signal
+// L1 Error infomation signal, downstream to L2 and handle in bus error unit
 class L1BusErrorUnitInfo(implicit p: Parameters) extends WXBundle {
   val ecc_error = Valid(UInt(PAddrBits.W))
 }

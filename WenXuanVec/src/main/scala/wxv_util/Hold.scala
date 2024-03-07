@@ -13,23 +13,24 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wenxuan.common
+package wxv_util
 
 import chisel3._
 import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import freechips.rocketchip.tile.XLen
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128
-){
-	def VAddrBits: Int = 39
+object ResultHoldBypass {
+  def apply[T <: Data](data: T, valid: Bool, init: Option[T] = None): T = {
+    val hold_data = if (init.isDefined) RegEnable(data, init.get, valid) else RegEnable(data, valid)
+    Mux(valid, data, hold_data)
+  }
 }
 
-trait HasWXCommonParameters extends HasTileParameters{
-
-	implicit val p: Parameters
-
+object ValidHoldBypass{
+  def apply(infire: Bool, outfire: Bool, flush: Bool = false.B) = {
+    val valid = RegInit(false.B)
+    when (flush) { valid := false.B } // NOTE: the flush will flush in & out
+    .elsewhen (outfire) { valid := false.B } // ATTENTION: order different with ValidHold
+    .elsewhen (infire) { valid := true.B }
+    valid || infire
+  }
 }

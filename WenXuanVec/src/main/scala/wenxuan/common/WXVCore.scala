@@ -25,6 +25,9 @@ import wenxuan.frontend._
 import wenxuan.mem._
 import org.chipsalliance.cde.config.Parameters
 
+abstract class WXModule(implicit val p: Parameters) extends Module
+  with HasWXCommonParameters
+
 abstract class WXBundle(implicit val p: Parameters) extends Bundle
   with HasWXCommonParameters
 

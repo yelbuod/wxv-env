@@ -15,7 +15,11 @@
 
 package wenxuan.common
 
+import chisel3._
+import chisel3.util._
 import coupledL2.L2Param
+import coupledL2.prefetch._
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import freechips.rocketchip.tile.XLen
 import org.chipsalliance.cde.config.{Config, Field, Parameters}
 import system.SoCParamsKey
@@ -28,17 +32,15 @@ case object WXVTileKey extends Field[WXVTileParams]
 case class WXVTileParams(
   core: WXVCoreParams = WXVCoreParams(),
   icache: ICacheParams = ICacheParams(),
-  dcache: Option[DCacheParams] = Some(DCacheParams()),
-  l2cache: Option[L2Param] = None,
+  dcacheOpt: Option[DCacheParams] = Some(DCacheParams()),
+  l2cacheOpt: Option[L2Param] = Some(L2Param(
+    ways = 8,
+    sets = 512, // default 256KB L2 : 64B * 8(way) * 512 = 64*4*2*512 = 64*4*1024B = 256KB
+    prefetch = Some(coupledL2.prefetch.PrefetchReceiverParams())
+  )),
   name: Option[String] = Some("wenxuanvec_tile"),
   hartId: Int = 0
 )
-
-
-
-class WXVTile()(implicit p: Parameters) {
-
-}
 
 trait HasTileParameters {
   implicit val p: Parameters
@@ -49,10 +51,65 @@ trait HasTileParameters {
 
   val XLEN: Int = p(XLen)
 
+  val HartId = tileParams.hartId
+
   val PAddrBits = p(SoCParamsKey).PAddrBits // PAddrBits is Phyical Memory addr bits
   //  val coreParams: WXVCoreParams = tileParams.core
   val VAddrBits: Int = tileParams.core.VAddrBits
 
   // cache hierarchy configurations
-  val l1BusDataWidth = 256
+  val l1BusDataWidth_Bits = 256
+
+}
+
+class WXVTile()(implicit p: Parameters) extends LazyModule
+  with HasTileParameters
+{
+  override def shouldBeInlined: Boolean = false
+  // outer submodule
+  val core = LazyModule(new WXVCore())
+  val l2top   = LazyModule(new L2Top())
+
+  // outer submodule interconnect
+  l2top.misc_l2_pmu := l2top.l1i_logger := core.frontend.icache.clientNode
+  l2top.l1_xbar :=* l2top.misc_l2_pmu
+
+  val l2cache = l2top.l2cache
+  l2cache match {
+    case Some(l2) =>
+      l2.node :*= l2top.xbar_l2_buffer :*= l2top.l1_xbar
+    case None =>
+  }
+
+
+  if (l2cache.isDefined) {
+    // TODO: add ECC interface of L2
+
+//    l2top.module.beu_errors.l2 <> 0.U.asTypeOf(l2top.module.beu_errors.l2)
+//    core.module.io.l2_hint.bits.sourceId := l2top.module.l2_hint.bits.sourceId
+//    core.module.io.l2_hint.bits.isKeyword := l2top.module.l2_hint.bits.isKeyword
+//    core.module.io.l2_hint.valid := l2top.module.l2_hint.valid
+//
+//    core.module.io.l2PfqBusy := false.B
+//    core.module.io.debugTopDown.l2MissMatch := l2top.module.debugTopDown.l2MissMatch
+//    l2top.module.debugTopDown.robHeadPaddr := core.module.io.debugTopDown.robHeadPaddr
+  } else {
+
+//    l2top.module.beu_errors.l2 <> 0.U.asTypeOf(l2top.module.beu_errors.l2)
+//    core.module.io.l2_hint.bits.sourceId := l2top.module.l2_hint.bits.sourceId
+//    core.module.io.l2_hint.bits.isKeyword := l2top.module.l2_hint.bits.isKeyword
+//    core.module.io.l2_hint.valid := l2top.module.l2_hint.valid
+//
+//    core.module.io.l2PfqBusy := false.B
+//    core.module.io.debugTopDown.l2MissMatch := false.B
+  }
+
+  // tile module implementation: submodule interconnect (core and l2) and connect with outer node module (core, l2)
+  lazy val module = new WXVTileImp(this)
+}
+
+class WXVTileImp(outer: WXVTile) extends LazyModuleImp(outer)
+  with HasTileParameters
+{
+
 }

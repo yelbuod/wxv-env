@@ -230,6 +230,10 @@ trait WenXuanVec extends WenXuanVecModule with HasChisel {
 
   def xiangshanModule = xiangshan(crossValue)
 
+  override def sources = T.sources {
+    super.sources() ++ Seq(PathRef(millSourcePath / "src"))
+  }
+
   object test extends SbtModuleTests with TestModule.ScalaTest {
     override def ivyDeps = super.ivyDeps() ++ Agg(
       defaultVersions(crossValue)("chiseltest")

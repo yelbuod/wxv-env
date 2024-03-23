@@ -13,27 +13,14 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wxtop
+package wenxuan.backend.rob
 
-import org.chipsalliance.cde.config.Config
-import freechips.rocketchip.tile.XLen
-import system.{SoCParameters, SoCParamsKey}
-import xiangshan.{DebugOptions, DebugOptionsKey, XSCoreParameters, XSCoreParamsKey, XSTileKey}
-import wenxuan.common.WithDefaultWenXuan
+import org.chipsalliance.cde.config.Parameters
+import wenxuan.common.WXVTileKey
+import utility.CircularQueuePtr
 
-import scala.collection.Seq
+class RobPtr(implicit val p: Parameters) extends CircularQueuePtr[RobPtr](
+  p => p(WXVTileKey).core.numRobEntries
+) {
 
-class BaseConfig extends Config(
-  new WithDefaultWenXuan ++
-    new Config((site, here, up) => {
-      case XLen => 64
-      case DebugOptionsKey => DebugOptions()
-      case SoCParamsKey => SoCParameters()
-      case XSTileKey => Seq.tabulate(1){ i => XSCoreParameters(HartId = i) }
-      case XSCoreParamsKey => XSCoreParameters(HartId = 0)
-    })
-)
-
-class DefaultConfig extends Config(
-  new BaseConfig()
-)
+}

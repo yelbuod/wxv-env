@@ -50,13 +50,14 @@ case class ICacheParams(
   nPrefetchEntries: Int = 12, // prefetch Issue Queue entry number
   nPrefBufferEntries: Int = 32, // prefetch buffer entry number
   maxIPFMoveConf: Int = 1, // confidence threshold of prefetch buffer move to L1 Cache
+  ICacheECCForceError: Boolean = false, // for ICache ECC test
 ) extends L1CacheParams {
 
   val setBytes = nSets * blockBytes
   val aliasBitsOpt = DCacheParameters().aliasBitsOpt //if(setBytes > pageSize) Some(log2Ceil(setBytes / pageSize)) else None
-  val reqFields: Seq[BundleFieldBase] = Seq(
-    PrefetchField(),
-    ReqSourceField()
+  val reqFields: Seq[BundleFieldBase] = Seq( // used to distinguish the source of request
+    PrefetchField(), // whether the request is from prefetch
+    ReqSourceField() // a enumeration (MemReqSource) specifies the request sources
   ) ++ aliasBitsOpt.map(AliasField)
   val echoFields: Seq[BundleFieldBase] = Nil
 
@@ -72,10 +73,6 @@ trait HasICacheParameters extends HasL1CacheParameters {
 
   def PortNumber = 2 // icache support 2 request channel
 
-  def enableICachePrefetch = cacheParams.enableICachePrefetch
-  def prefetchToL1 = cacheParams.prefetchToL1
-  def prefetchPipeNum = cacheParams.prefetchPipeNum
-
   // nWays ICache is divided into partWayNum SRAM with pWay
   def partWayNum = 4
   def pWay = nWays / partWayNum
@@ -89,7 +86,12 @@ trait HasICacheParameters extends HasL1CacheParameters {
   def dataCodeUnitNum = partBlockBits / dataCodeUnit // the number of ECC encode units in a partBlock
   def dataCodeEntryBits = dataCodeBits * dataCodeUnitNum // the total number of code bits needed for a partBlock
 
+  def ICacheECCForceError = cacheParams.ICacheECCForceError
+
   // IPrefetch
+  def enableICachePrefetch = cacheParams.enableICachePrefetch
+  def prefetchToL1 = cacheParams.prefetchToL1
+  def prefetchPipeNum = cacheParams.prefetchPipeNum
   def nPrefetchEntries = cacheParams.nPrefetchEntries // the number of IPrefetch Queue Entries
   def nPrefBufferEntries = cacheParams.nPrefBufferEntries // the number of IPrefetch Buffer Entries
   def maxIPFMoveConf = cacheParams.maxIPFMoveConf // IPrefetch Buffer move threshold
@@ -126,6 +128,25 @@ class ICachePMPBundle(implicit p: Parameters) extends ICacheBundle{
   val resp = Input(new PMPRespBundle())
 }
 
+class ICache()(implicit p: Parameters) extends LazyModule
+  with HasICacheParameters
+{
+  override def shouldBeInlined: Boolean = false
+  // outer node
+  val clientParameters = TLMasterPortParameters.v1(
+    Seq(TLMasterParameters.v1(
+      name = "icache",
+      sourceId = IdRange(0, cacheParams.nMissEntries + 1), // n missEntries handle n req in mainPipe and "+ 1" means 1 channel id for FDIP prefetch
+    )),
+    requestFields = cacheParams.reqFields,
+    echoFields = cacheParams.echoFields
+  )
+
+  val clientNode = TLClientNode(Seq(clientParameters))
+  // module implementation : submodule interconnect and connect with outer node
+  lazy val module = new ICacheImp(this)
+}
+
 class ICacheIO(implicit p: Parameters) extends ICacheBundle
 {
   val hartId = Input(UInt(8.W))
@@ -145,24 +166,8 @@ class ICacheIO(implicit p: Parameters) extends ICacheBundle
   val csr_parity_enable = Input(Bool())
 }
 
-class ICache()(implicit p: Parameters) extends LazyModule with HasICacheParameters {
-  override def shouldBeInlined: Boolean = false
-
-  val clientParameters = TLMasterPortParameters.v1(
-    Seq(TLMasterParameters.v1(
-      name = "icache",
-      sourceId = IdRange(0, cacheParams.nMissEntries + 1), // n missEntries handle n req in mainPipe and "+ 1" means 1 channel id for FDIP prefetch
-    )),
-    requestFields = cacheParams.reqFields,
-    echoFields = cacheParams.echoFields
-  )
-
-  val clientNode = TLClientNode(Seq(clientParameters))
-
-  lazy val module = new ICacheImp(this)
-}
-
 // ICache: mainPipe+missUnit+metaArray+dataArray+FDIPPrefetch
+// The implicit variable [[p]] inside the LazyModuleImp
 class ICacheImp(outer: ICache) extends LazyModuleImp(outer) with HasICacheParameters {
   val io = IO(new ICacheIO)
 

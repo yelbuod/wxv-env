@@ -19,8 +19,15 @@ import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import wenxuan.common._
+import wenxuan.backend.rob.RobPtr
 
 abstract class TlbBundle(implicit p: Parameters) extends WXBundle
+
+/** backend Mem block */
+class MemBlockidxBundle(implicit p: Parameters) extends TlbBundle
+{
+
+}
 
 class TlbReq(implicit p: Parameters) extends TlbBundle {
   val vaddr = Output(UInt(VAddrBits.W))
@@ -40,6 +47,13 @@ class TlbReq(implicit p: Parameters) extends TlbBundle {
   override def toPrintable: Printable = {
     p"vaddr:0x${Hexadecimal(vaddr)} cmd:${cmd} kill:${kill} pc:0x${Hexadecimal(debug.pc)} robIdx:${debug.robIdx}"
   }
+}
+
+class TlbExceptionBundle(implicit p: Parameters) extends TlbBundle
+{
+  val ld = Output(Bool())
+  val st = Output(Bool())
+  val instr = Output(Bool())
 }
 
 class TlbResp(nDups: Int = 1)(implicit p: Parameters) extends TlbBundle {

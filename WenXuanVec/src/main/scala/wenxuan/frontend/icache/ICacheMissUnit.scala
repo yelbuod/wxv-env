@@ -19,7 +19,7 @@ import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.tilelink._
-
+import utility.{ReqSourceKey,MemReqSource}
 class ICacheMissUnitModule(implicit p: Parameters) extends ICacheModule
 
 class ICacheMissEntry(edge: TLEdgeOut, id: Int)(implicit p: Parameters) extends ICacheMissUnitModule
@@ -145,7 +145,7 @@ class ICacheMissEntry(edge: TLEdgeOut, id: Int)(implicit p: Parameters) extends 
 
   io.mem_acquire.bits := getBlock // getBlock
   // req source
-  io.mem_acquire.bits.user.lift(ReqSourceKey).foreach(_ := MemReqSource.CPUInst.id.U)
+  io.mem_acquire.bits.user.lift(ReqSourceKey).foreach(_ := MemReqSource.CPUInst.id.U) // specify mem_acquire req from CPUInst (CPU instruction fetch)
   require(nSets <= 256) // icache size should not be more than 128KB
 
   //resp to ifu

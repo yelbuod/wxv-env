@@ -22,6 +22,7 @@ import freechips.rocketchip.tilelink._
 import wenxuan.cache.mmu.{TlbCmd, TlbRequestIO}
 import wenxuan.frontend._
 import utility._
+import huancun.PreferCacheKey
 import wxv_util.ResultHoldBypass
 import wenxuan.common.WXVTileKey
 
@@ -772,7 +773,9 @@ class PrefetchQueue(edge: TLEdgeOut)(implicit p: Parameters) extends IPrefetchMo
     )._2
   }
 
+  // specifies the request is from prefetch
   io.mem_acquire.bits.user.lift(PreferCacheKey).foreach(_ := true.B)
+  // specify mem_acquire req from L1InstPrefetch (L1 instruction Prefetch) by Enumeration "MemReqSource"
   io.mem_acquire.bits.user.lift(ReqSourceKey).foreach(_ := MemReqSource.L1InstPrefetch.id.U)
 
   // grant port

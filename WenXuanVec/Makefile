@@ -1,10 +1,10 @@
 BUILD_DIR = ./build
 
-TOP = XSTop
+TOP = WXVTop
 SIM_TOP = SimTop
 
-FPGATOP = top.TopMain
-SIMTOP  = top.SimTop
+FPGATOP = wxtop.TopMain
+SIMTOP  = wxtop.SimTop
 
 TOP_V = $(BUILD_DIR)/$(TOP).v
 SIM_TOP_V = $(BUILD_DIR)/$(SIM_TOP).v

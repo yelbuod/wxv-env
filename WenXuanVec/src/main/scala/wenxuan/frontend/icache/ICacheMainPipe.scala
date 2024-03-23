@@ -639,10 +639,12 @@ class ICacheMainPipe(implicit p: Parameters) extends ICacheModule {
     io.errors(i).valid := RegNext(s2_parity_error(i) && RegNext(RegNext(s1_fire)))
     io.errors(i).report_to_beu := RegNext(s2_parity_error(i) && RegNext(RegNext(s1_fire)))
     io.errors(i).paddr := RegNext(RegNext(s2_req_paddr(i)))
+    // ECC error source : meta/data/l2(when miss access l2)
     io.errors(i).source := DontCare
     io.errors(i).source.tag := RegNext(RegNext(s2_parity_meta_error(i)))
     io.errors(i).source.data := RegNext(s2_parity_data_error(i))
     io.errors(i).source.l2 := false.B
+    // in ICache, the operation that causes the ECC error must be "fetch"
     io.errors(i).opType := DontCare
     io.errors(i).opType.fetch := true.B
   }
@@ -655,7 +657,7 @@ class ICacheMainPipe(implicit p: Parameters) extends ICacheModule {
       io.errors(i).paddr := RegNext(s2_req_paddr(i))
       io.errors(i).source.tag := false.B
       io.errors(i).source.data := false.B
-      io.errors(i).source.l2 := true.B
+      io.errors(i).source.l2 := true.B // MSHR error means error caused by L2
     }
   }
 

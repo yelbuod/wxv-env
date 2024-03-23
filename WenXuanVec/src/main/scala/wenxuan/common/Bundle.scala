@@ -18,6 +18,7 @@ package wenxuan.common
 import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
+import wenxuan.cache.HasDCacheParameters
 
 
 // Distribute to CSR signal bundle
@@ -48,4 +49,10 @@ class DistributedCSRUpdateReq(implicit p: Parameters) extends WXBundle {
     }
     println("Distributed CSR update req registered for " + src_description)
   }
+}
+
+// custom l2 - l1 interface
+class L2ToL1Hint(implicit p: Parameters) extends WXBundle with HasDCacheParameters {
+  val sourceId = UInt(log2Up(cacheParams.nMissEntries).W)    // tilelink sourceID -> mshr id
+  val isKeyword = Bool()                             // miss entry keyword -> L1 load queue replay
 }

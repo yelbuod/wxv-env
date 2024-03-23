@@ -18,7 +18,7 @@ package wenxuan.cache
 import chisel3._
 import chisel3.util._
 import utility.Code
-import xiangshan.cache.L1CacheParameters
+import wenxuan.cache.L1CacheParams
 
 // 32KB, 8-way, 64-blockByte
 case class DCacheParams
@@ -26,6 +26,8 @@ case class DCacheParams
   nSets: Int = 64,
   nWays: Int = 8,
   rowBits: Int = 64,
+  nTLBSets: Int = 1,
+  nTLBWays: Int = 32,
   tagECC: Option[String] = None,
   dataECC: Option[String] = None,
   replacer: Option[String] = Some("setplru"),
@@ -38,7 +40,7 @@ case class DCacheParams
   blockBytes: Int = 64,
   nMaxPrefetchEntry: Int = 1,
   alwaysReleaseData: Boolean = false
-) extends L1CacheParameters {
+) extends L1CacheParams {
   // if sets * blockBytes > 4KB(page size),
   // cache alias will happen,
   // we need to avoid this by recoding additional bits in L2 cache
@@ -48,4 +50,8 @@ case class DCacheParams
   def tagCode: Code = Code.fromString(tagECC)
 
   def dataCode: Code = Code.fromString(dataECC)
+}
+
+trait HasDCacheParameters extends HasL1CacheParameters {
+  val cacheParams = tileParams.dcacheOpt.getOrElse(DCacheParams())
 }

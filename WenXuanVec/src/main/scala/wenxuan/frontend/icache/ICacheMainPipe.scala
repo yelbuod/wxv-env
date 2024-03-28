@@ -431,7 +431,8 @@ class ICacheMainPipe(implicit p: Parameters) extends ICacheModule {
   val s2_except_tlb = VecInit(Seq(s2_except_tlb_pf(0) || s2_except_tlb_af(0), s2_double_line && (s2_except_tlb_pf(1) || s2_except_tlb_af(1))))
   val s2_has_except_tlb = s2_valid && s2_except_tlb.reduce(_ || _)
   // long delay exception signal
-  // exception information and mmio
+  // fromPMP.instr： fetch addr is not allowed by PMP execution permission
+  // fromPMP.mmio : fetch addr hit the address region with Uncacheable Attribute specified by PMA, which needs mmio access
   val pmpExcpAF = VecInit(Seq(fromPMP(0).instr, fromPMP(1).instr && s2_double_line))
   val s2_except_pmp_af = DataHoldBypass(pmpExcpAF, RegNext(s1_fire))
   val s2_mmio = s2_valid && DataHoldBypass(fromPMP(0).mmio && !s2_except_tlb(0) && !s2_except_pmp_af(0), RegNext(s1_fire)).asBool
@@ -681,8 +682,9 @@ class ICacheMainPipe(implicit p: Parameters) extends ICacheModule {
   /** replacement status register */
   val port_touch_sets = Seq.fill(PortNumber)(Wire(Vec(2, UInt(log2Ceil(nSets / 2).W))))
   val port_touch_ways = Seq.fill(PortNumber)(Wire(Vec(2, Valid(UInt(log2Ceil(nWays).W)))))
+  /** each port has two length vector to contain 2 sets and 2 ways information
+   * cause vec(0) is used to contain read touch and vec(1) is used to contain write touch when miss */
   (port_touch_ways zip port_touch_sets).zipWithIndex.map { case ((t_w, t_s), i) =>
-
     /** update replacement status register: 0 is hit access/ 1 is miss access */
     t_s(0) := s2_req_vsetIdx(i)(highestIdxBit, 1)
     // hit in slot will be ignored, which generate a repeated access
@@ -694,6 +696,13 @@ class ICacheMainPipe(implicit p: Parameters) extends ICacheModule {
     t_w(1).bits := OHToUInt(s2_waymask(i))
   }
 
+  /**
+   * port_touch_ways(i) receive port(i) information, And when vsetIdx(i) is even, port(i) accesses bank0, otherwise bank1
+   * As for touch_ways, touch_ways(0) always corresponds to bank0, touch_ways(1) always corresponds to bank1
+   * So if vsetIdx(0) is even, port_touch_ways(0) contain the access info for bank0, then touch_ways(0) connects to port_touch_ways(0), touch_ways(1) connects to port_touch_ways(1)
+   * on the contrary, if vsetIdx(0) is odd, port_touch_ways(0) contain the access info for bank1, then touch_ways(0) connects to port_touch_ways(1), touch_ways(1) connects to port_touch_ways(0)
+   * each element of touch_way and touch_sets is a vec of length two,
+   * so when update the replacer, the state inside will be updated sequentially by each valid way/set element */
   val touch_ways = VecInit((0 until PortNumber).map(i => Mux(s2_req_vsetIdx(i)(0), port_touch_ways(1), port_touch_ways(0))))
   val touch_sets = VecInit((0 until PortNumber).map(i => Mux(s2_req_vsetIdx(i)(0), port_touch_sets(1), port_touch_sets(0))))
   ((replacers zip touch_sets) zip touch_ways).map { case ((r, s), w) => r.access(s, w) }

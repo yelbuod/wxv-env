@@ -286,7 +286,7 @@ class PrefetchReq(implicit  p: Parameters) extends IPrefetchBundle{
   val vSetIdx   = UInt(idxBits.W)
 }
 
-class IPredfetchIO(implicit p: Parameters) extends IPrefetchBundle {
+class IPrefetchIO(implicit p: Parameters) extends IPrefetchBundle {
   val ftqReq              = Flipped(new FtqPrefechBundle)
   val iTLBInter           = new TlbRequestIO
   val pmp                 = new ICachePMPBundle
@@ -306,7 +306,7 @@ class IPredfetchIO(implicit p: Parameters) extends IPrefetchBundle {
 
 class IPrefetchPipe(implicit p: Parameters) extends  IPrefetchModule
 {
-  val io = IO(new IPredfetchIO)
+  val io = IO(new IPrefetchIO)
 
   val enableBit = RegInit(false.B)
   enableBit := enableICachePrefetch.B

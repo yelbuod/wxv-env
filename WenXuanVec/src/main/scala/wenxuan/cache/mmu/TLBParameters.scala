@@ -13,29 +13,27 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wenxuan.common
+package wenxuan.cache.mmu
 
 import chisel3._
 import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import freechips.rocketchip.tile.XLen
-import wenxuan.cache.mmu.MMUParams
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128,
-	mmuParams: MMUParams = MMUParams(),
-){
-	def VAddrBits: Int = 39
-}
+case class TLBParams
+(
+  name: String = "none",
+  // dmode(debug mode) depends on whether the load/store privilege defined in mstatus's mpp field are take into account.
+  // so TLB for load/store must use dmode to get the corresponding privilege level, while the TLB for fetch does not.
+  useDmode: Boolean = true,
+  outReplace: Boolean = true, // mutilple tlb use the same outer replacer
+  nSets: Int = 1,
+  nWays: Int = 8,
+  Replacer: Option[String] = Some("plru"),
 
-trait HasWXCommonParameters extends HasTileParameters{
+)
 
-	implicit val p: Parameters
-
-	val coreParams = tileParams.core
-
-	val asidLen = coreParams.mmuParams.MMUAsidLen
-
-}
+case class MMUParams
+(
+  name: String = "MMU",
+  MMUAsidLen: Int = 16, // max is 16, 0 is not supported now
+  itlb: TLBParams = TLBParams(),
+)

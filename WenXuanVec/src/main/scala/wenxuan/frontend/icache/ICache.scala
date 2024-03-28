@@ -37,8 +37,6 @@ case class ICacheParams(
   nSets: Int = 128,
   nWays: Int = 4,
   rowBits: Int = 64,
-  nTLBSets: Int = 1,
-  nTLBWays: Int = 32,
   blockBytes: Int = 64,
   nMissEntries: Int = 2,
   tagECC: Option[String] = None,
@@ -46,7 +44,7 @@ case class ICacheParams(
   replacer: Option[String] = Some("random"),
   enableICachePrefetch: Boolean = true, // enable FDIP Prefetch module prefetch to L2
   prefetchToL1: Boolean = false, // FDIP Prefetch module move to L1 Cache meta/data
-  prefetchPipeNum: Int = 1, // prefetch request number
+  prefetchPipeNum: Int = 1, // TODO: prefetch request number, make it parameterization
   nPrefetchEntries: Int = 12, // prefetch Issue Queue entry number
   nPrefBufferEntries: Int = 32, // prefetch buffer entry number
   maxIPFMoveConf: Int = 1, // confidence threshold of prefetch buffer move to L1 Cache

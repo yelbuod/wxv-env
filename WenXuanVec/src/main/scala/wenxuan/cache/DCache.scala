@@ -26,8 +26,6 @@ case class DCacheParams
   nSets: Int = 64,
   nWays: Int = 8,
   rowBits: Int = 64,
-  nTLBSets: Int = 1,
-  nTLBWays: Int = 32,
   tagECC: Option[String] = None,
   dataECC: Option[String] = None,
   replacer: Option[String] = Some("setplru"),

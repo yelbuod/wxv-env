@@ -13,29 +13,16 @@
  * See the Mulan PSL v2 for more details.
  * ************************************************************************************* */
 
-package wenxuan.common
+package wenxuan.backend.fu
 
-import chisel3._
-import chisel3.util._
-import org.chipsalliance.cde.config.{Field, Parameters}
-import freechips.rocketchip.tile.XLen
-import wenxuan.cache.mmu.MMUParams
+/** CSR Mapping Address Constants
+ */
+trait HasCSRConst {
 
-case class WXVCoreParams(
-	fetchWidth: Int = 4,
-  decodeWidth: Int = 2,
-  numRobEntries: Int = 128,
-	mmuParams: MMUParams = MMUParams(),
-){
-	def VAddrBits: Int = 39
-}
-
-trait HasWXCommonParameters extends HasTileParameters{
-
-	implicit val p: Parameters
-
-	val coreParams = tileParams.core
-
-	val asidLen = coreParams.mmuParams.MMUAsidLen
-
+  /** Physical Memory Protection */
+  val PmpcfgBase = 0x3A0
+  val PmpaddrBase = 0x3B0
+  /** Physical Memory Attribution */
+  val PmacfgBase = 0x7C0
+  val PmaaddrBase =0x7C8
 }

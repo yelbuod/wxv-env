@@ -95,7 +95,7 @@ class SfenceBundle(implicit p: Parameters) extends WXBundle {
     val rs1 = Bool()
     val rs2 = Bool()
     val addr = UInt(VAddrBits.W)
-    val asid = UInt(AsidLength.W)
+    val asid = UInt(AsidLen.W)
     val flushPipe = Bool()
   }
 

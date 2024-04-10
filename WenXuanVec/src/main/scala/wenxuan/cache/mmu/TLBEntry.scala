@@ -25,7 +25,7 @@ class TlbSectorEntry(pageNormal: Boolean, pageSuper: Boolean)(implicit p: Parame
 
   val tag = if (!pageNormal) UInt((vpnLen - vpnnLen).W)
   else UInt(sectorvpnLen.W)
-  val asid = UInt(asidLen.W)
+  val asid = UInt(AsidLen.W)
   val level = if (!pageNormal) Some(UInt(1.W))
   else if (!pageSuper) None
   else Some(UInt(2.W))

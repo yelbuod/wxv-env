@@ -301,6 +301,7 @@ class TlbStorageWrapper(ports: Int, q: TLBParams, nDups: Int = 1)(implicit p: Pa
   page.sfence <> io.sfence
   page.csr <> io.csr
 
+  /** wrapper replacer or outReplace logic */
   val refill_idx = if (q.outReplace) {
     io.replace.page.access <> page.access
     io.replace.page.chosen_set := DontCare

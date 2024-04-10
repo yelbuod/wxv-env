@@ -39,6 +39,7 @@ class TlbReq(implicit p: Parameters) extends TlbBundle {
   val memidx = Output(new MemBlockidxBundle)
   // do not translate, but still do pmp/pma check
   val no_translate = Output(Bool())
+  // just for debug
   val debug = new Bundle {
     val pc = Output(UInt(XLEN.W))
     val robIdx = Output(new RobPtr)
@@ -67,7 +68,7 @@ class TlbResp(nDups: Int = 1)(implicit p: Parameters) extends TlbBundle {
   })
   val ptwBack = Output(Bool()) // when ptw back, wake up replay rs's state
   val memidx = Output(new MemBlockidxBundle)
-
+  // just for debug
   val debug = new Bundle {
     val robIdx = Output(new RobPtr)
     val isFirstIssue = Output(Bool())
@@ -91,6 +92,15 @@ class MMUIOBaseBundle(implicit p: Parameters) extends TlbBundle{
   def base_connect(sfence: SfenceBundle, csr: TlbCsrBundle): Unit = {
     this.sfence := sfence
     this.csr := csr
+  }
+
+  // overwrite satp. write satp will cause flushpipe but csr.priv won't
+  // satp will be dealyed several cycles from writing, but csr.priv won't
+  // so inside mmu, these two signals should be divided
+  def base_connect(sfence: SfenceBundle, csr: TlbCsrBundle, satp: TlbSatpBundle) = {
+    this.sfence <> sfence
+    this.csr <> csr
+    this.csr.satp := satp
   }
 }
 
@@ -122,6 +132,31 @@ class TlbSectorPermBundle(implicit p: Parameters) extends TlbBundle {
   }
   override def toPrintable: Printable = {
     p"pf:${pf} af:${af} d:${d} a:${a} g:${g} u:${u} x:${x} w:${w} r:${r} "
+  }
+}
+
+class TlbPermBundle(implicit p: Parameters) extends TlbSectorPermBundle {
+  def :=(perm: TlbSectorPermBundle) = {
+    this.pf := perm.pf
+    this.af := perm.af
+    this.d  := perm.d
+    this.a  := perm.a
+    this.g  := perm.g
+    this.u  := perm.u
+    this.x  := perm.x
+    this.w  := perm.w
+    this.r  := perm.r
+
+    this
+  }
+}
+
+class TlbPtwIOwithMemIdx(Width: Int = 1)(implicit p: Parameters) extends TlbBundle {
+  val req = Vec(Width, DecoupledIO(new PtwReqwithMemIdx))
+  val resp = Flipped(DecoupledIO(new PtwSectorRespwithMemIdx))
+
+  override def toPrintable: Printable = {
+    p"req(0):${req(0).valid} ${req(0).ready} ${req(0).bits} | resp:${resp.valid} ${resp.ready} ${resp.bits}"
   }
 }
 
@@ -199,7 +234,7 @@ class PteBundle(implicit p: Parameters) extends PtwBundle{
 
 class PtwEntry(tagLen: Int, hasPerm: Boolean = false, hasLevel: Boolean = false)(implicit p: Parameters) extends PtwBundle {
   val tag = UInt(tagLen.W)
-  val asid = UInt(asidLen.W)
+  val asid = UInt(AsidLen.W)
   val ppn = UInt(ppnLen.W)
   val perm = if (hasPerm) Some(new PtePermBundle) else None
   val level = if (hasLevel) Some(UInt(log2Up(Level).W)) else None
@@ -290,6 +325,7 @@ class PtwSectorResp(implicit p: Parameters) extends PtwBundle {
     )
   }
 
+  // determine whether the request is hit the PTW response
   def hit(vpn: UInt, asid: UInt, allType: Boolean = false, ignoreAsid: Boolean = false) = {
     require(vpn.getWidth == vpnLen)
     //    require(this.asid.getWidth <= asid.getWidth)
@@ -311,22 +347,42 @@ class PtwSectorResp(implicit p: Parameters) extends PtwBundle {
   }
 }
 
+class PtwReq(implicit p: Parameters) extends PtwBundle {
+  val vpn = UInt(vpnLen.W)
 
-
-class TlbPermBundle(implicit p: Parameters) extends TlbSectorPermBundle {
-  def :=(perm: TlbSectorPermBundle) = {
-    this.pf := perm.pf
-    this.af := perm.af
-    this.d  := perm.d
-    this.a  := perm.a
-    this.g  := perm.g
-    this.u  := perm.u
-    this.x  := perm.x
-    this.w  := perm.w
-    this.r  := perm.r
-
-    this
+  override def toPrintable: Printable = {
+    p"vpn:0x${Hexadecimal(vpn)}"
   }
+}
+
+
+class PtwResp(implicit p: Parameters) extends PtwBundle {
+  val entry = new PtwEntry(tagLen = vpnLen, hasPerm = true, hasLevel = true)
+  val pf = Bool()
+  val af = Bool()
+
+  def apply(pf: Bool, af: Bool, level: UInt, pte: PteBundle, vpn: UInt, asid: UInt) = {
+    this.entry.level.map(_ := level)
+    this.entry.tag := vpn
+    this.entry.perm.map(_ := pte.getPerm())
+    this.entry.ppn := pte.ppn
+    this.entry.prefetch := DontCare
+    this.entry.asid := asid
+    this.entry.v := !pf
+    this.pf := pf
+    this.af := af
+  }
+
+  override def toPrintable: Printable = {
+    p"entry:${entry} pf:${pf} af:${af}"
+  }
+}
+
+class PtwReqwithMemIdx(implicit p: Parameters) extends PtwReq {
+  val memidx = new MemBlockidxBundle
+}
+class PtwSectorRespwithMemIdx(implicit p: Parameters) extends PtwSectorResp {
+  val memidx = new MemBlockidxBundle
 }
 
 object TlbCmd {

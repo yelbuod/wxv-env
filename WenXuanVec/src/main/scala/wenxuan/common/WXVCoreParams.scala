@@ -23,6 +23,7 @@ import wenxuan.cache.mmu.MMUParams
 
 case class WXVCoreParams(
 	fetchWidth: Int = 4,
+	ftqSize: Int = 64,
   decodeWidth: Int = 2,
   numRobEntries: Int = 128,
 	mmuParams: MMUParams = MMUParams(),
@@ -36,6 +37,8 @@ trait HasWXCommonParameters extends HasTileParameters{
 
 	val coreParams = tileParams.core
 
-	val asidLen = coreParams.mmuParams.MMUAsidLen
+	val AsidLen = coreParams.mmuParams.MMUAsidLen
+	val EnbaleTlbDebug = coreParams.mmuParams.EnbaleTlbDebug
 
+	val FtqSize = coreParams.ftqSize
 }

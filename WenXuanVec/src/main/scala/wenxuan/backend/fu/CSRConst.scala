@@ -15,14 +15,26 @@
 
 package wenxuan.backend.fu
 
-/** CSR Mapping Address Constants
- */
+import chisel3._
+import chisel3.util._
+
 trait HasCSRConst {
 
+  /**
+   * CSR Mapping Address Constants
+   */
   /** Physical Memory Protection */
   val PmpcfgBase = 0x3A0
   val PmpaddrBase = 0x3B0
   /** Physical Memory Attribution */
   val PmacfgBase = 0x7C0
   val PmaaddrBase =0x7C8
+
+  /**
+   * Privilege level
+   */
+  def ModeM = 0x3.U
+  def ModeH = 0x2.U
+  def ModeS = 0x1.U
+  def ModeU = 0x0.U
 }

@@ -239,11 +239,11 @@ class ICacheMainPipe(implicit p: Parameters) extends ICacheModule {
   }
   toITLB.map { port =>
     port.bits.cmd := TlbCmd.exec
-    port.bits.memidx := DontCare
-    port.bits.debug.robIdx := DontCare
-    port.bits.no_translate := false.B
-    port.bits.debug.isFirstIssue := DontCare
     port.bits.kill := DontCare
+    port.bits.memidx := DontCare
+    port.bits.no_translate := false.B
+    port.bits.debug.robIdx := DontCare
+    port.bits.debug.isFirstIssue := DontCare
   }
   io.itlb.foreach(_.req_kill := false.B)
 

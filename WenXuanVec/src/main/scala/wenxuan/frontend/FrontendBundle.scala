@@ -34,7 +34,7 @@ class FtqPrefechBundle(implicit p: Parameters) extends WXBundle {
 class FtqICacheInfo(implicit p: Parameters)extends WXBundle with HasICacheParameters{
   val startAddr           = UInt(VAddrBits.W)
   val nextlineStart       = UInt(VAddrBits.W)
-  // when startAddr is in the middle of the cacheline,
+  // the default fetchWidth is half of the blockBytes, so when startAddr is in the middle of the cacheline,
   //  crossCacheline need to be set, means that the next line request is valid
   def crossCacheline =  startAddr(blockOffBits - 1) === 1.U
   def fromFtqPcBundle(b: Ftq_RF_Components) = {
@@ -47,4 +47,48 @@ class FtqICacheInfo(implicit p: Parameters)extends WXBundle with HasICacheParame
 class FtqToICacheRequestBundle(implicit p: Parameters)extends WXBundle with HasICacheParameters{
   val pcMemRead           = Vec(5, new FtqICacheInfo)
   val readValid           = Vec(5, Bool())
+}
+
+/** BPU resp prediction info to Ftq */
+class BranchPredictionBundle(implicit p: Parameters) extends WXBundle
+  with HasBPUConst with BPUUtils
+{
+  val pc    = Vec(numDup, UInt(VAddrBits.W))
+  val valid = Vec(numDup, Bool())
+  val hasRedirect  = Vec(numDup, Bool())
+  val ftq_idx = new FtqPtr
+}
+
+class BranchPredictionResp(implicit p: Parameters) extends WXBundle with HasBPUConst {
+  // val valids = Vec(3, Bool())
+  val s1 = new BranchPredictionBundle
+  val s2 = new BranchPredictionBundle
+  val s3 = new BranchPredictionBundle
+
+  val last_stage_meta = UInt(MaxMetaLength.W)
+  val last_stage_spec_info = new Ftq_Redirect_SRAMEntry
+  val last_stage_ftb_entry = new FTBEntry
+
+  val topdown_info = new FrontendTopDownBundle
+
+  def lastStage = s3
+  def selectedResp ={
+    val res =
+      PriorityMux(Seq(
+        ((s3.valid(3) && s3.hasRedirect(3)) -> s3),
+        ((s2.valid(3) && s2.hasRedirect(3)) -> s2),
+        (s1.valid(3) -> s1)
+      ))
+    res
+  }
+  def selectedRespIdxForFtq =
+    PriorityMux(Seq(
+      ((s3.valid(3) && s3.hasRedirect(3)) -> BP_S3),
+      ((s2.valid(3) && s2.hasRedirect(3)) -> BP_S2),
+      (s1.valid(3) -> BP_S1)
+    ))
+}
+
+class BpuToFtqIO(implicit p: Parameters) extends WXBundle {
+  val resp = DecoupledIO(new BranchPredictionResp())
 }

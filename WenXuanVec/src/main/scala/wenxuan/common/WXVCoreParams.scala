@@ -22,7 +22,7 @@ import freechips.rocketchip.tile.XLen
 import wenxuan.cache.mmu.MMUParams
 
 case class WXVCoreParams(
-	fetchWidth: Int = 4,
+	fetchWidth: Int = 8,
 	ftqSize: Int = 64,
   decodeWidth: Int = 2,
   numRobEntries: Int = 128,

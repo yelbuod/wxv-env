@@ -48,7 +48,9 @@ trait HasTileParameters {
   // why use 'def' instead of 'val', cause 'val' will exactly create a whole WXVTileParams type instance
   //  in which extends HasTileParameters, even if you don't need all members of HasTileParameters
   def tileParams: WXVTileParams = p(WXVTileKey)
-
+  // to satisfy the nextline icache fetch arch design
+  require(tileParams.core.fetchWidth * 4 == tileParams.icache.blockBytes / 2)
+  
   val XLEN: Int = p(XLen)
 
   val HartId = tileParams.hartId

@@ -288,7 +288,7 @@ trait TLBMethod(PortNum: Int, nRespDups: Int, q: TLBParams) {this: TLB =>
     val new_coming = RegNext(req_in(idx).fire && !req_in(idx).bits.kill && !flush_pipe(idx), false.B)
     val miss_wire = new_coming && missVec(idx)
     val miss_v = ValidHoldBypass(miss_wire, resp(idx).fire, flush_pipe(idx))
-    val miss_req_v = ValidHoldBypass(miss_wire || (miss_v && flush_mmu && !mmu_flush_pipe),
+    val miss_req_v = ValidHoldBypass(miss_wire || (miss_v && !flush_mmu && !mmu_flush_pipe),
       toPTW(idx).fire || resp(idx).fire, flush_pipe(idx))
 
     // initial response :

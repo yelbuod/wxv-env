@@ -50,7 +50,7 @@ trait HasTileParameters {
   def tileParams: WXVTileParams = p(WXVTileKey)
   // to satisfy the nextline icache fetch arch design
   require(tileParams.core.fetchWidth * 4 == tileParams.icache.blockBytes / 2)
-  
+
   val XLEN: Int = p(XLen)
 
   val HartId = tileParams.hartId

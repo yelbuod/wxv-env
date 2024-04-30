@@ -19,7 +19,21 @@ import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import wenxuan.cache.HasDCacheParameters
+import wenxuan.frontend.FtqPtr
+import wenxuan.backend.rob.RobPtr
 import utility._
+
+class ValidUndirectioned[T <: Data](gen: T) extends Bundle {
+  val valid = Bool()
+  val bits = gen.cloneType.asInstanceOf[T]
+
+}
+
+object ValidUndirectioned {
+  def apply[T <: Data](gen: T) = {
+    new ValidUndirectioned[T](gen)
+  }
+}
 
 /** Distribute to CSR signal bundle */
 class DistributedCSRIO(implicit p: Parameters) extends WXBundle {
@@ -104,3 +118,24 @@ class SfenceBundle(implicit p: Parameters) extends WXBundle {
   }
 }
 
+
+class Redirect(implicit p: Parameters) extends WXBundle {
+  val isRVC = Bool()
+  val robIdx = new RobPtr
+  val ftqIdx = new FtqPtr
+  val ftqOffset = UInt(log2Up(PredictWidth).W)
+  val level = RedirectLevel()
+  val interrupt = Bool()
+  val cfiUpdate = new CfiUpdateInfo
+
+  val stFtqIdx = new FtqPtr // for load violation predict
+  val stFtqOffset = UInt(log2Up(PredictWidth).W)
+
+  val debug_runahead_checkpoint_id = UInt(64.W)
+  val debugIsCtrl = Bool()
+  val debugIsMemVio = Bool()
+
+  // def isUnconditional() = RedirectLevel.isUnconditional(level)
+  def flushItself() = RedirectLevel.flushItself(level)
+  // def isException() = RedirectLevel.isException(level)
+}

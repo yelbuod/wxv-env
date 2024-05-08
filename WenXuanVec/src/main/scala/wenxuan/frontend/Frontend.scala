@@ -43,6 +43,11 @@ class FrontendImp(outer: Frontend) extends LazyModuleImp(outer)
   })
 
   private val icache = outer.icache.module
+  val ftq = Module(new Ftq)
+
+  icache.io.prefetch <> ftq.io.toPrefetch
+  icache.io.fetch.req <> ftq.io.toICache.req
 
   io.error <> RegNext(RegNext(icache.io.error))
+
 }

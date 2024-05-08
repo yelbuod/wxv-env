@@ -25,6 +25,7 @@ import org.chipsalliance.cde.config.{Config, Field, Parameters}
 import system.SoCParamsKey
 import wenxuan.frontend.icache.ICacheParams
 import wenxuan.cache.DCacheParams
+import xiangshan.DebugOptionsKey
 
 case object WXVTileKey extends Field[WXVTileParams]
 
@@ -48,9 +49,7 @@ trait HasTileParameters {
   // why use 'def' instead of 'val', cause 'val' will exactly create a whole WXVTileParams type instance
   //  in which extends HasTileParameters, even if you don't need all members of HasTileParameters
   def tileParams: WXVTileParams = p(WXVTileKey)
-  // to satisfy the nextline icache fetch arch design
-  require(tileParams.core.fetchWidth * 4 == tileParams.icache.blockBytes / 2)
-
+  val env = p(DebugOptionsKey)
   val XLEN: Int = p(XLen)
 
   val HartId = tileParams.hartId

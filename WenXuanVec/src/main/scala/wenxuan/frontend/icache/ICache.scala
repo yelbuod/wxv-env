@@ -42,6 +42,7 @@ case class ICacheParams(
   tagECC: Option[String] = None,
   dataECC: Option[String] = None,
   replacer: Option[String] = Some("random"),
+  /** prefetch matters */
   enableICachePrefetch: Boolean = true, // enable FDIP Prefetch module prefetch to L2
   prefetchToL1: Boolean = false, // FDIP Prefetch module move to L1 Cache meta/data
   prefetchPipeNum: Int = 1, // TODO: prefetch request number, make it parameterization
@@ -49,6 +50,8 @@ case class ICacheParams(
   nPrefBufferEntries: Int = 32, // prefetch buffer entry number
   maxIPFMoveConf: Int = 1, // confidence threshold of prefetch buffer move to L1 Cache
   ICacheECCForceError: Boolean = false, // for ICache ECC test
+  minRangeFromIFUptr: Int = 2, // ftq prefetch Ptr min range from ifu ptr
+  maxRangeFromIFUptr: Int = 32, // ftq prefetch Ptr max range from ifu ptr
 ) extends L1CacheParams {
 
   val setBytes = nSets * blockBytes
@@ -93,6 +96,10 @@ trait HasICacheParameters extends HasL1CacheParameters {
   def nPrefetchEntries = cacheParams.nPrefetchEntries // the number of IPrefetch Queue Entries
   def nPrefBufferEntries = cacheParams.nPrefBufferEntries // the number of IPrefetch Buffer Entries
   def maxIPFMoveConf = cacheParams.maxIPFMoveConf // IPrefetch Buffer move threshold
+
+  // FTQ prefetch Ptr min & max range from ifu ptr
+  def minRangeFromIFUptr = cacheParams.minRangeFromIFUptr
+  def maxRangeFromIFUptr = cacheParams.maxRangeFromIFUptr
 
   def generatePipeControl(lastFire: Bool, thisFire: Bool, thisFlush: Bool, lastFlush: Bool): Bool = {
     val valid = RegInit(false.B)

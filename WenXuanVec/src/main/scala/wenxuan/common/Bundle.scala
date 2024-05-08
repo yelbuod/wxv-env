@@ -19,9 +19,11 @@ import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import wenxuan.cache.HasDCacheParameters
-import wenxuan.frontend.FtqPtr
+import wenxuan.frontend._
 import wenxuan.backend.rob.RobPtr
 import utility._
+import wenxuan.commonType._
+import wenxuan.backendInfoType._
 
 class ValidUndirectioned[T <: Data](gen: T) extends Bundle {
   val valid = Bool()
@@ -118,6 +120,51 @@ class SfenceBundle(implicit p: Parameters) extends WXBundle {
   }
 }
 
+// cfi update. cfi means call frame instr/info, including br/jmp/call/ret
+class CfiUpdateInfo(implicit p: Parameters) extends WXBundle with HasBPUParameter with HasBPUConst {
+  // from backend
+  val pc = UInt(VAddrBits.W)
+  // frontend -> backend -> frontend
+  val pd = new PreDecodeInfo
+  val ssp = UInt(log2Up(RasSize).W)
+  val sctr = UInt(log2Up(RasCtrSize).W)
+  val TOSW = new RASPtr
+  val TOSR = new RASPtr
+  val NOS = new RASPtr
+  val topAddr = UInt(VAddrBits.W)
+  // val hist = new ShiftingGlobalHistory
+  val folded_hist = new AllFoldedHistories(foldedGHistInfos)
+  val afhob = new AllAheadFoldedHistoryOldestBits(foldedGHistInfos)
+  val lastBrNumOH = UInt((numBr+1).W)
+  val ghr = UInt(UbtbGHRLength.W)
+  val histPtr = new CGHPtr
+  val specCnt = Vec(numBr, UInt(10.W))
+  // need pipeline update
+  val br_hit = Bool() // if in ftb entry
+  val jr_hit = Bool() // if in ftb entry
+  val sc_hit = Bool() // if used in ftb entry, invalid if !br_hit
+  val predTaken = Bool()
+  val target = UInt(VAddrBits.W)
+  val taken = Bool()
+  val isMisPred = Bool()
+  val shift = UInt((log2Ceil(numBr)+1).W)
+  val addIntoHist = Bool()
+
+  def fromFtqRedirectSram(entry: Ftq_Redirect_SRAMEntry) = {
+    // this.hist := entry.ghist
+    this.folded_hist := entry.folded_hist
+    this.lastBrNumOH := entry.lastBrNumOH
+    this.afhob := entry.afhob
+    this.histPtr := entry.histPtr
+    this.ssp := entry.ssp
+    this.sctr := entry.sctr
+    this.TOSW := entry.TOSW
+    this.TOSR := entry.TOSR
+    this.NOS := entry.NOS
+    this.topAddr := entry.topAddr
+    this
+  }
+}
 
 class Redirect(implicit p: Parameters) extends WXBundle {
   val isRVC = Bool()
@@ -138,4 +185,48 @@ class Redirect(implicit p: Parameters) extends WXBundle {
   // def isUnconditional() = RedirectLevel.isUnconditional(level)
   def flushItself() = RedirectLevel.flushItself(level)
   // def isException() = RedirectLevel.isException(level)
+}
+
+/** frontend <> backend */
+// backend ROB commit info
+class RobCommitInfo(implicit p: Parameters) extends WXBundle {
+  val ldest = UInt(5.W)
+  val rfWen = Bool()
+  val fpWen = Bool()
+  val wflags = Bool()
+  val commitType = CommitType()
+  val pdest = UInt(PhyRegIdxWidth.W)
+  val ftqIdx = new FtqPtr
+  val ftqOffset = UInt(log2Up(PredictWidth).W)
+  val isMove = Bool()
+  val isRVC = Bool()
+  // these should be optimized for synthesis verilog
+  val pc = UInt(VAddrBits.W)
+}
+
+// ftq to backend ctrlblock
+class FtqToCtrlIO(implicit p: Parameters) extends WXBundle with HasBackendRedirectInfo {
+  // write to backend pc mem
+  val pc_mem_wen = Output(Bool())
+  val pc_mem_waddr = Output(UInt(log2Ceil(FtqSize).W))
+  val pc_mem_wdata = Output(new Ftq_RF_Components)
+  // newest target
+  val newest_entry_target = Output(UInt(VAddrBits.W))
+  val newest_entry_ptr = Output(new FtqPtr)
+}
+// backend ctrlblock to ftq
+class CtrlToFtqIO(implicit p: Parameters) extends WXBundle {
+  val rob_commits = Vec(CommitWidth, Valid(new RobCommitInfo))
+  val redirect = Valid(new Redirect)
+  val ftqIdxAhead = Vec(BackendRedirectNum, Valid(new FtqPtr))
+  val ftqIdxSelOH = Valid(UInt((BackendRedirectNum).W))
+}
+// frontend <> bakcend ctrlblock
+class FrontendToCtrlIO(implicit p: Parameters) extends WXBundle {
+  // to backend end
+  val cfVec = Vec(DecodeWidth, DecoupledIO(new CtrlFlow))
+  val stallReason = new StallReasonIO(DecodeWidth)
+  val fromFtq = new FtqToCtrlIO
+  // from backend
+  val toFtq = Flipped(new CtrlToFtqIO)
 }

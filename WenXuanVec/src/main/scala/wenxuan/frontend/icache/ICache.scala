@@ -29,8 +29,8 @@ import utility._
 import wenxuan.common._
 import wenxuan.frontend._
 import wenxuan.cache._
-import wenxuan.cache.mmu.TlbRequestIO
-import wenxuan.backend.fu.{PMPReqBundle,PMPRespBundle}
+import wenxuan.cache.mmu.{TLBParams, TlbRequestIO}
+import wenxuan.backend.fu.{PMPReqBundle, PMPRespBundle}
 
 // 32KB, 4-way, 64-blockByte
 case class ICacheParams(
@@ -52,6 +52,13 @@ case class ICacheParams(
   ICacheECCForceError: Boolean = false, // for ICache ECC test
   minRangeFromIFUptr: Int = 2, // ftq prefetch Ptr min range from ifu ptr
   maxRangeFromIFUptr: Int = 32, // ftq prefetch Ptr max range from ifu ptr
+  /** ITLB matters */
+  itlbParams: TLBParams = TLBParams(
+    name = "itlb",
+    useDmode = false,
+    ifetch = true,
+    nWays = 48,
+  ),
 ) extends L1CacheParams {
 
   val setBytes = nSets * blockBytes

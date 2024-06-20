@@ -25,13 +25,13 @@ case class TLBParams
   // dmode(debug mode) depends on whether the load/store privilege defined in mstatus's mpp field are take into account.
   // so TLB for load/store must use dmode to get the corresponding privilege level, while the TLB for fetch does not.
   useDmode: Boolean = true,
-  ifecth: Boolean = false, // use to block fetch from S-Mode to U-Mode
+  ifetch: Boolean = false, // use to block instr fetch from S-Mode to U-Mode
   outReplace: Boolean = false, // mutilple tlb use the same outer replacer
   // default fully-associate TLB
   nSets: Int = 1,
   nWays: Int = 48,
   Replacer: Option[String] = Some("plru"),
-  outsideRecvFlush: Boolean = false, // if outside moudle waiting for tlb recv flush pipe
+  outsideRecvFlush: Boolean = false, // if outside module waiting for tlb recv flush pipe
 ){
   val Associative: String = "fully-associative" // must be fa
 }

@@ -24,7 +24,7 @@ import wenxuan.backend.rob.RobPtr
 import utility._
 import wenxuan.commonType._
 import wenxuan.backendInfoType._
-
+import wenxuan.backendInfoType.ExceptionVec
 class ValidUndirectioned[T <: Data](gen: T) extends Bundle {
   val valid = Bool()
   val bits = gen.cloneType.asInstanceOf[T]
@@ -224,9 +224,31 @@ class CtrlToFtqIO(implicit p: Parameters) extends WXBundle {
 // frontend <> bakcend ctrlblock
 class FrontendToCtrlIO(implicit p: Parameters) extends WXBundle {
   // to backend end
-  val cfVec = Vec(DecodeWidth, DecoupledIO(new CtrlFlow))
+  val instPackVec = Vec(DecodeWidth, DecoupledIO(new InstPacket))
   val stallReason = new StallReasonIO(DecodeWidth)
   val fromFtq = new FtqToCtrlIO
   // from backend
   val toFtq = Flipped(new CtrlToFtqIO)
+}
+// Frontend IBuffer to Backend Decoder
+class InstPacket(implicit p: Parameters) extends WXBundle {
+  val instr = UInt(32.W)
+  val pc = UInt(VAddrBits.W)
+  val foldpc = UInt(MemPredPCWidth.W)
+  val exceptionVec = ExceptionVec()
+  val trigger = new TriggerCf
+  val pd = new PreDecodeInfo
+  val pred_taken = Bool()
+  val crossPageIPFFix = Bool()
+  val storeSetHit = Bool() // inst has been allocated an store set
+  val waitForRobIdx = new RobPtr // store set predicted previous store robIdx
+  // Load wait is needed
+  // load inst will not be executed until former store (predicted by mdp) addr calcuated
+  val loadWaitBit = Bool()
+  // If (loadWaitBit && loadWaitStrict), strict load wait is needed
+  // load inst will not be executed until ALL former store addr calcuated
+  val loadWaitStrict = Bool()
+  val ssid = UInt(SSIDWidth.W)
+  val ftqPtr = new FtqPtr
+  val ftqOffset = UInt(log2Up(PredictWidth).W)
 }

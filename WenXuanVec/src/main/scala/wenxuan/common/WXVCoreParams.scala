@@ -28,9 +28,11 @@ case class WXVCoreParams(
 	fetchWidth: Int = 8,
 	ftqSize: Int = 64,
   decodeWidth: Int = 6,
-	nrPhyRegs: Int = 192,
 	commitWidth: Int = 6,
-  numRobEntries: Int = 128,
+	renameSnapshotNum: Int = 4,
+	enableRenameSnapshot: Boolean = true,
+	nrPhyRegs: Int = 192,
+	numRobEntries: Int = 128,
 	mmuParams: MMUParams = MMUParams(),
 	exuParams: ExuParams = ExuParams(
 		JmpCnt = 1,
@@ -73,6 +75,10 @@ trait HasWXCommonParameters extends HasTileParameters{
 	val InstFetchBlockOffBits = log2Ceil(InstFetchBlockBytes)
 
 	val DecodeWidth = coreParams.decodeWidth
+	val RenameWidth = coreParams.decodeWidth
+
+	val RenameSnapshotNum = coreParams.renameSnapshotNum
+	val EnableRenameSnapshot = coreParams.enableRenameSnapshot
 
 	val exuParams = coreParams.exuParams
 	val NumRedirect = exuParams.JmpCnt + exuParams.AluCnt

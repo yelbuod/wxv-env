@@ -538,3 +538,20 @@ class mmioCommitRead(implicit p: Parameters) extends WXBundle {
   val mmioFtqPtr = Output(new FtqPtr)
   val mmioLastCommit = Input(Bool())
 }
+
+class FetchToIBuffer(implicit p: Parameters) extends WXBundle {
+  val instrs    = Vec(PredictWidth, UInt(32.W))
+  val valid     = UInt(PredictWidth.W)
+  val enqEnable = UInt(PredictWidth.W)
+  val pd        = Vec(PredictWidth, new PreDecodeInfo)
+  val pc        = Vec(PredictWidth, UInt(VAddrBits.W))
+  val foldpc    = Vec(PredictWidth, UInt(MemPredPCWidth.W))
+  val ftqPtr       = new FtqPtr
+  val ftqOffset    = Vec(PredictWidth, ValidUndirectioned(UInt(log2Ceil(PredictWidth).W)))
+  val ipf          = Vec(PredictWidth, Bool())
+  val acf          = Vec(PredictWidth, Bool())
+  val crossPageIPFFix = Vec(PredictWidth, Bool())
+  val triggered    = Vec(PredictWidth, new TriggerCf)
+
+  val topdown_info = new FrontendTopDownBundle
+}

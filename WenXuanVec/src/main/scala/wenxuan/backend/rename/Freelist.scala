@@ -21,7 +21,7 @@ import org.chipsalliance.cde.config.Parameters
 import utility.{CircularQueuePtr, CircularShift, HasCircularQueuePtrHelper}
 import utils.{HasPerfEvents, XSDebug, XSError, XSPerfAccumulate}
 import wenxuan.common.WXModule
-import wenxuan.backend.{SnapshotPort, RobCommitIO}
+import wenxuan.backend.{SnapshotPort, SnapshotGenerator, RobCommitIO}
 
 abstract class BaseFreeList(size: Int)(implicit p: Parameters) extends WXModule with HasCircularQueuePtrHelper {
   val io = IO(new Bundle {
@@ -55,6 +55,7 @@ abstract class BaseFreeList(size: Int)(implicit p: Parameters) extends WXModule 
     }
   }
 
+  // stage2Redirect -> io.redirect -|-> lastCycleRedirect (stage3Redirect)
   val lastCycleRedirect = RegNext(io.redirect, false.B)
   val lastCycleSnpt = RegNext(io.snpt, 0.U.asTypeOf(io.snpt))
 

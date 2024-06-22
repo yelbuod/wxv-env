@@ -20,7 +20,7 @@ import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import utility.ParallelPriorityMux
 import utils.XSError
-import wenxuan.backend.{RobCommitIO, SnapshotPort}
+import wenxuan.backend.{RobCommitIO, SnapshotGenerator, SnapshotPort}
 import wenxuan.common.{WXBundle, WXModule}
 
 class RatReadPort(implicit p: Parameters) extends WXBundle {

@@ -18,7 +18,7 @@ package wenxuan.backend.decode
 import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
-import wenxuan.backend.{CtrlSignals, InstCtrlPacket, MicroOp}
+import wenxuan.backend.{CtrlSignals, InstCtrlPacket, MicroOp, CustomCSRCtrlIO}
 import wenxuan.common.{InstPacket, WXModule}
 import freechips.rocketchip.rocket.Instructions._
 import freechips.rocketchip.util.uintToBitPat

@@ -15,12 +15,29 @@
 
 package wenxuan.backend.rob
 
+import chisel3._
+import chisel3.util._
+import freechips.rocketchip.diplomacy.{LazyModule, LazyModuleImp}
 import org.chipsalliance.cde.config.Parameters
-import wenxuan.common.WXVTileKey
+import wenxuan.common.{HasWXCommonParameters, WXVTileKey}
 import utility.CircularQueuePtr
+import wenxuan.backend.{RobCommitIO, SnapshotPort}
 
 class RobPtr(implicit val p: Parameters) extends CircularQueuePtr[RobPtr](
   p => p(WXVTileKey).core.numRobEntries
 ) {
 
+}
+
+class Rob(implicit p: Parameters) extends LazyModule with HasWritebackSink with HasWXCommonParameters {
+  override def shouldBeInlined: Boolean = false
+
+  lazy val module = new RobImp(this)
+}
+
+class RobImp(outer: Rob)(implicit p: Parameters) extends LazyModuleImp(outer){
+  val io = IO(new Bundle{
+    val commits = Output(new RobCommitIO()) // Commit & WALK
+    val snpt = Input(new SnapshotPort()) // snapshot info
+  })
 }

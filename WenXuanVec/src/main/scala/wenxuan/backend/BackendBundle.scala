@@ -107,12 +107,15 @@ class SnapshotPort(implicit p: Parameters) extends WXBundle {
 
 // CSR control to all core components
 class CustomCSRCtrlIO(implicit p: Parameters) extends WXBundle {
+  // Decode: check svinval at decode and make instr invalid if svinval_enable is false
+  val svinval_enable = Bool()
   // Rename
-  val fusion_enable = Output(Bool())
-  val singlestep = Output(Bool())
+  val fusion_enable = Bool()
+  val singlestep = Bool()
 
 }
 
+// ROB commit & WALK
 class RobCommitIO(implicit p: Parameters) extends WXBundle {
   // instr packet commit
   val isCommit = Bool()
@@ -124,6 +127,11 @@ class RobCommitIO(implicit p: Parameters) extends WXBundle {
   val robIdx = Vec(CommitWidth, new RobPtr)
   // ROB info
   val info = Vec(CommitWidth, new RobCommitInfo)
+}
+
+// Redirect info
+class Redirect(implicit p: Parameters) extends WXBundle {
+  val robIdx = new RobPtr() // redirect instr robIdx, used to resume (snapshot and WALK)
 }
 
 class PerfDebugInfo(implicit p: Parameters) extends WXBundle {
